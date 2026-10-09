@@ -144,55 +144,40 @@ export default function App() {
       ...prev,
       {
         boardTiles: JSON.parse(JSON.stringify(stateRef.current.boardTiles)),
-        stacks: JSON.parse(JSON.stringify(stateRef.current.stacks)),
         dockSlots: [...stateRef.current.dockSlots],
       },
     ]);
   };
 
   // Plitkani tanlash va Dockga joylash (Sinxron va 100% xavfsiz)
-  const processTileSelection = (tile, source) => {
+  const handleBoardTileClick = (tile) => {
     if (stateRef.current.gameStatus !== 'playing') return;
     if (stateRef.current.isProcessing) return; // Portlash paytida bloklash
     if (stateRef.current.dockSlots.length >= 7) return; // Dock to'lgan
 
-    if (source.type === 'board') {
-      if (isTileBlocked(tile, stateRef.current.boardTiles)) {
-        sound.playLocked();
-        setShakingId(tile.id);
-        setTimeout(() => setShakingId(null), 350);
-        return;
-      }
+    if (isTileBlocked(tile, stateRef.current.boardTiles)) {
+      sound.playLocked();
+      setShakingId(tile.id);
+      setTimeout(() => setShakingId(null), 350);
+      return;
     }
 
     // Undo uchun saqlash
     saveSnapshot();
     sound.playClick();
 
-    // 1. Manzilidan olib tashlash
-    let nextBoard = stateRef.current.boardTiles;
-    let nextStacks = stateRef.current.stacks;
-
-    if (source.type === 'board') {
-      nextBoard = nextBoard.filter((t) => t.id !== tile.id);
-    } else if (source.type === 'stack') {
-      const sIdx = source.stackIdx;
-      nextStacks = nextStacks.map((s, idx) =>
-        idx === sIdx ? s.slice(0, -1) : s
-      );
-    }
+    // 1. Maydondan olib tashlash
+    const nextBoard = stateRef.current.boardTiles.filter((t) => t.id !== tile.id);
 
     // 2. Dockga joylash va guruhlash
     const updatedDock = addTileToDock(stateRef.current.dockSlots, tile);
 
-    // 3. Sinxron refni darhol yangilash (Race condition bartaraf etildi)
+    // 3. Sinxron refni darhol yangilash
     stateRef.current.boardTiles = nextBoard;
-    stateRef.current.stacks = nextStacks;
     stateRef.current.dockSlots = updatedDock;
 
     // 4. React state-ni yangilash
     setBoardTiles(nextBoard);
-    setStacks(nextStacks);
 
     // 5. 3 talik moslikni tekshirish
     const { matched, remaining } = checkMatch(updatedDock);
@@ -231,13 +216,7 @@ export default function App() {
         blastTimerRef.current = null;
 
         // G'alaba yoki Deadlock tekshiruvi
-        const totalRemaining =
-          nextBoard.length +
-          nextStacks[0].length +
-          nextStacks[1].length +
-          nextStacks[2].length;
-
-        if (totalRemaining === 0) {
+        if (nextBoard.length === 0) {
           if (remaining.length === 0) {
             handleWin();
           } else {
@@ -259,13 +238,7 @@ export default function App() {
       }
 
       // Maydonda hech narsa qolmagan bo'lsa
-      const totalRemaining =
-        nextBoard.length +
-        nextStacks[0].length +
-        nextStacks[1].length +
-        nextStacks[2].length;
-
-      if (totalRemaining === 0) {
+      if (nextBoard.length === 0) {
         if (updatedDock.length === 0) {
           handleWin();
         } else {
@@ -275,17 +248,6 @@ export default function App() {
         }
       }
     }
-  };
-
-  const handleBoardTileClick = (tile) => {
-    processTileSelection(tile, { type: 'board' });
-  };
-
-  const handleStackClick = (stackIdx) => {
-    const stack = stateRef.current.stacks[stackIdx];
-    if (!stack || stack.length === 0) return;
-    const topTile = stack[stack.length - 1];
-    processTileSelection(topTile, { type: 'stack', stackIdx });
   };
 
   const handleWin = () => {
@@ -320,14 +282,13 @@ export default function App() {
 
     stateRef.current = {
       boardTiles: lastState.boardTiles,
-      stacks: lastState.stacks,
+      stacks: [[], [], []],
       dockSlots: lastState.dockSlots,
       isProcessing: false,
       gameStatus: 'playing',
     };
 
     setBoardTiles(lastState.boardTiles);
-    setStacks(lastState.stacks);
     setDockSlots(lastState.dockSlots);
     setGameStatus('playing');
   };
@@ -337,7 +298,6 @@ export default function App() {
     if (magnetCount <= 0 || gameStatus !== 'playing' || isProcessing) return;
 
     const currentBoard = stateRef.current.boardTiles;
-    const currentStacks = stateRef.current.stacks;
     const currentDock = stateRef.current.dockSlots;
 
     // Dockdagi turlar hisobi
@@ -353,11 +313,7 @@ export default function App() {
     // 1-navbatda dockda bor mevani 3 taga to'ldirish
     for (const [type, count] of sortedDockTypes) {
       const inBoard = currentBoard.filter((t) => t.type === type).length;
-      const inStacks = currentStacks.reduce(
-        (sum, s) => sum + s.filter((t) => t.type === type).length,
-        0
-      );
-      if (count + inBoard + inStacks >= 3) {
+      if (count + inBoard >= 3) {
         targetType = type;
         needed = 3 - count;
         break;
@@ -370,11 +326,6 @@ export default function App() {
       currentBoard.forEach((t) => {
         allCounts[t.type] = (allCounts[t.type] || 0) + 1;
       });
-      currentStacks.forEach((s) => {
-        s.forEach((t) => {
-          allCounts[t.type] = (allCounts[t.type] || 0) + 1;
-        });
-      });
       for (const [type, count] of Object.entries(allCounts)) {
         if (count >= 3) {
           targetType = type;
@@ -385,7 +336,7 @@ export default function App() {
     }
 
     if (!targetType) return;
-    if (currentDock.length + needed > 7) return; // Joy yetmasa o'tkazmaydi
+    if (currentDock.length + needed > 7) return;
 
     saveSnapshot();
     setMagnetCount((c) => c - 1);
@@ -393,7 +344,6 @@ export default function App() {
 
     const pulled = [];
     let updatedBoard = [...currentBoard];
-    let updatedStacks = currentStacks.map((s) => [...s]);
 
     // Ochiq maydon plitkalaridan olish
     for (let i = updatedBoard.length - 1; i >= 0 && pulled.length < needed; i--) {
@@ -401,14 +351,6 @@ export default function App() {
       if (t.type === targetType && !isTileBlocked(t, updatedBoard)) {
         pulled.push(t);
         updatedBoard.splice(i, 1);
-      }
-    }
-
-    // Stacklar ustidan olish
-    for (let sIdx = 0; sIdx < updatedStacks.length && pulled.length < needed; sIdx++) {
-      const s = updatedStacks[sIdx];
-      if (s.length > 0 && s[s.length - 1].type === targetType) {
-        pulled.push(s.pop());
       }
     }
 
@@ -421,29 +363,17 @@ export default function App() {
       }
     }
 
-    // Qolganini stacklar ichidan olish
-    for (let sIdx = 0; sIdx < updatedStacks.length && pulled.length < needed; sIdx++) {
-      const s = updatedStacks[sIdx];
-      for (let i = s.length - 1; i >= 0 && pulled.length < needed; i--) {
-        if (s[i].type === targetType) {
-          pulled.push(s.splice(i, 1)[0]);
-        }
-      }
-    }
-
     let updatedDock = [...currentDock];
     for (const t of pulled) {
       updatedDock = addTileToDock(updatedDock, t);
     }
 
     stateRef.current.boardTiles = updatedBoard;
-    stateRef.current.stacks = updatedStacks;
     stateRef.current.dockSlots = updatedDock;
     stateRef.current.isProcessing = true;
     setIsProcessing(true);
 
     setBoardTiles(updatedBoard);
-    setStacks(updatedStacks);
     setDockSlots(updatedDock);
 
     const { matched, remaining } = checkMatch(updatedDock);
@@ -459,13 +389,7 @@ export default function App() {
         setIsProcessing(false);
         blastTimerRef.current = null;
 
-        const totalRemaining =
-          updatedBoard.length +
-          updatedStacks[0].length +
-          updatedStacks[1].length +
-          updatedStacks[2].length;
-
-        if (totalRemaining === 0) {
+        if (updatedBoard.length === 0) {
           if (remaining.length === 0) {
             handleWin();
           } else {
@@ -501,11 +425,11 @@ export default function App() {
     setBoardTiles(shuffledBoard);
   };
 
-  // 1:1 Koordinata shkalasi
+  // Koordinata shkalasi (7 ustun, 6 qator mukammal simmetriya)
   const TILE_W = 50;
   const TILE_H = 58;
-  const STEP_X = 52;
-  const STEP_Y = 58;
+  const STEP_X = 50;
+  const STEP_Y = 56;
 
   return (
     <div className="mobile-app-shell">
@@ -579,19 +503,20 @@ export default function App() {
           )}
         </div>
 
-        {/* 3. MAYDON (BOARD - 4 QATLAMLI MAHJONG TARTIBI) */}
+        {/* 3. MAYDON (YAGONALASHGAN ROYAL 3D MAHJONG MAYDONI) */}
         <main className="board-section">
           <div className="board-matrix">
             {boardTiles.map((tile) => {
               const blocked = isTileBlocked(tile, boardTiles);
               const isShaking = shakingId === tile.id;
-              const left = 14 + tile.x * STEP_X;
-              const top = 16 + tile.y * STEP_Y;
+              const left = 20 + tile.x * STEP_X;
+              const top = 10 + tile.y * STEP_Y;
               const zIndex = tile.layer * 10 + 2;
 
               return (
                 <div
                   key={tile.id}
+                  data-layer={tile.layer}
                   className={`board-tile-item ${
                     blocked ? 'blocked' : 'open'
                   } ${isShaking ? 'shaking' : ''}`}
@@ -610,49 +535,6 @@ export default function App() {
             })}
           </div>
         </main>
-
-        {/* 4. PASTKI 3 TA TAXLAM (BOTTOM 3 STACKS / DECKS) */}
-        <div className="bottom-stacks-row">
-          {stacks.map((stack, stackIdx) => {
-            if (stack.length === 0) {
-              return (
-                <div key={stackIdx} className="stack-column empty">
-                  <div className="stack-empty-slot">
-                    <span className="empty-slot-mark">✓</span>
-                  </div>
-                </div>
-              );
-            }
-
-            const topTile = stack[stack.length - 1];
-
-            return (
-              <div
-                key={stackIdx}
-                className="stack-column"
-                onClick={() => handleStackClick(stackIdx)}
-              >
-                {/* Pastki qatlamlar soyasi */}
-                {stack.length > 2 && (
-                  <div
-                    className="stack-card-layer"
-                    style={{ transform: 'translateY(-6px)' }}
-                  />
-                )}
-                {stack.length > 1 && (
-                  <div
-                    className="stack-card-layer"
-                    style={{ transform: 'translateY(-3px)' }}
-                  />
-                )}
-                {/* Eng ustki faol karta */}
-                <div className="stack-card-layer top-card">
-                  <FruitIcon type={topTile.type} className="w-7 h-7" />
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {/* 5. PASTKI BOSHQARUV TUGMALARI (BOTTOM ACTION BAR - 1:1 D:\tile.png) */}
         <footer className="action-bar">

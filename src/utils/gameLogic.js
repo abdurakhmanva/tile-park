@@ -16,66 +16,79 @@ export const TILE_TYPES = [
  * Rasmdagi (D:\tile.png) zich 4 qatlamli (L0, L1, L2, L3) Mahjong joylashuvi:
  * Maydon eni ~7 ustun, bo'yi ~6 qator.
  */
+/**
+ * 5 QATLAMLI STANDART SXEMA (54 ta plitka = 18 ta uchtalik)
+ * Barcha plitkalar to'liq maydonda uyg'un joylashtirilgan.
+ */
 export const BOARD_LAYOUT = [
-  // Layer 0: Asosiy pastki poydevor (18 ta plitka)
+  // Layer 0: Asosiy poydevor (20 ta plitka)
   { layer: 0, x: 0, y: 0 }, { layer: 0, x: 1, y: 0 }, { layer: 0, x: 2, y: 0 }, { layer: 0, x: 3, y: 0 }, { layer: 0, x: 4, y: 0 }, { layer: 0, x: 5, y: 0 }, { layer: 0, x: 6, y: 0 },
   { layer: 0, x: 0, y: 1 }, { layer: 0, x: 6, y: 1 },
   { layer: 0, x: 0, y: 2 }, { layer: 0, x: 6, y: 2 },
   { layer: 0, x: 0, y: 3 }, { layer: 0, x: 6, y: 3 },
   { layer: 0, x: 0, y: 4 }, { layer: 0, x: 1, y: 4 }, { layer: 0, x: 2, y: 4 }, { layer: 0, x: 3, y: 4 }, { layer: 0, x: 4, y: 4 }, { layer: 0, x: 5, y: 4 }, { layer: 0, x: 6, y: 4 },
 
-  // Layer 1: O'rta qatlam (12 ta plitka)
+  // Layer 1: O'rta qatlam (14 ta plitka)
   { layer: 1, x: 0.5, y: 0.5 }, { layer: 1, x: 1.5, y: 0.5 }, { layer: 1, x: 4.5, y: 0.5 }, { layer: 1, x: 5.5, y: 0.5 },
   { layer: 1, x: 0.5, y: 1.5 }, { layer: 1, x: 5.5, y: 1.5 },
   { layer: 1, x: 0.5, y: 2.5 }, { layer: 1, x: 5.5, y: 2.5 },
   { layer: 1, x: 0.5, y: 3.5 }, { layer: 1, x: 1.5, y: 3.5 }, { layer: 1, x: 4.5, y: 3.5 }, { layer: 1, x: 5.5, y: 3.5 },
+  { layer: 1, x: 2.5, y: 0.5 }, { layer: 1, x: 3.5, y: 0.5 },
 
-  // Layer 2: Markaziy qatlam (8 ta plitka)
+  // Layer 2: Markaziy qatlam (10 ta plitka)
   { layer: 2, x: 2, y: 1 }, { layer: 2, x: 3, y: 1 }, { layer: 2, x: 4, y: 1 },
   { layer: 2, x: 1.5, y: 2 }, { layer: 2, x: 4.5, y: 2 },
   { layer: 2, x: 2, y: 3 }, { layer: 2, x: 3, y: 3 }, { layer: 2, x: 4, y: 3 },
+  { layer: 2, x: 2.5, y: 2 }, { layer: 2, x: 3.5, y: 2 },
 
-  // Layer 3: Eng ustki qatlam (6 ta plitka)
-  { layer: 3, x: 2.5, y: 1.5 }, { layer: 3, x: 3.5, y: 1.5 },
-  { layer: 3, x: 2.0, y: 2.2 }, { layer: 3, x: 3.0, y: 2.0 }, { layer: 3, x: 4.0, y: 2.2 },
-  { layer: 3, x: 3.0, y: 2.8 },
+  // Layer 3: Ichki piramida (6 ta plitka)
+  { layer: 3, x: 2.0, y: 1.5 }, { layer: 3, x: 4.0, y: 1.5 },
+  { layer: 3, x: 3.0, y: 1.5 }, { layer: 3, x: 3.0, y: 2.5 },
+  { layer: 3, x: 2.0, y: 2.5 }, { layer: 3, x: 4.0, y: 2.5 },
+
+  // Layer 4: Cho'qqi (4 ta plitka)
+  { layer: 4, x: 2.5, y: 2.0 }, { layer: 4, x: 3.5, y: 2.0 },
+  { layer: 4, x: 3.0, y: 1.7 }, { layer: 4, x: 3.0, y: 2.3 },
 ];
 
 /**
- * 6 QATLAMLI QIYINLASHTIRILGAN PIRAMIDA SXEMASI (54 ta plitka)
- * Yuqori zichlikdagi Mahjong qal'asi — chuqur bog'liqliklar va xavfli to'siqlar!
+ * 6 QATLAMLI YAGONALASHGAN ROYAL PIRAMIDA (60 ta plitka = 20 ta uchtalik)
+ * Pastdagi ortiqcha ajralib turuvchi kubchalarsiz, barchasi yagona ulug'vor Mahjong qal'asida!
  */
 export const HARD_BOARD_LAYOUT = [
-  // Layer 0: Asosiy poydevor (18 ta plitka)
-  { layer: 0, x: 0, y: 0 }, { layer: 0, x: 1, y: 0 }, { layer: 0, x: 2, y: 0 }, { layer: 0, x: 4, y: 0 }, { layer: 0, x: 5, y: 0 }, { layer: 0, x: 6, y: 0 },
+  // Layer 0: Asosiy poydevor (22 ta plitka)
+  { layer: 0, x: 0, y: 0 }, { layer: 0, x: 1, y: 0 }, { layer: 0, x: 2, y: 0 }, { layer: 0, x: 3, y: 0 }, { layer: 0, x: 4, y: 0 }, { layer: 0, x: 5, y: 0 }, { layer: 0, x: 6, y: 0 },
   { layer: 0, x: 0, y: 1 }, { layer: 0, x: 6, y: 1 },
   { layer: 0, x: 0, y: 2 }, { layer: 0, x: 6, y: 2 },
   { layer: 0, x: 0, y: 3 }, { layer: 0, x: 6, y: 3 },
-  { layer: 0, x: 0, y: 4 }, { layer: 0, x: 1, y: 4 }, { layer: 0, x: 2, y: 4 }, { layer: 0, x: 4, y: 4 }, { layer: 0, x: 5, y: 4 }, { layer: 0, x: 6, y: 4 },
+  { layer: 0, x: 0, y: 4 }, { layer: 0, x: 6, y: 4 },
+  { layer: 0, x: 0, y: 5 }, { layer: 0, x: 1, y: 5 }, { layer: 0, x: 2, y: 5 }, { layer: 0, x: 3, y: 5 }, { layer: 0, x: 4, y: 5 }, { layer: 0, x: 5, y: 5 }, { layer: 0, x: 6, y: 5 },
 
-  // Layer 1: O'rta qatlam (14 ta plitka)
+  // Layer 1: O'rta poydevor (16 ta plitka)
   { layer: 1, x: 0.5, y: 0.5 }, { layer: 1, x: 1.5, y: 0.5 }, { layer: 1, x: 4.5, y: 0.5 }, { layer: 1, x: 5.5, y: 0.5 },
   { layer: 1, x: 0.5, y: 1.5 }, { layer: 1, x: 1.5, y: 1.5 }, { layer: 1, x: 4.5, y: 1.5 }, { layer: 1, x: 5.5, y: 1.5 },
-  { layer: 1, x: 0.5, y: 2.5 }, { layer: 1, x: 1.5, y: 2.5 }, { layer: 1, x: 4.5, y: 2.5 }, { layer: 1, x: 5.5, y: 2.5 },
-  { layer: 1, x: 0.5, y: 3.5 }, { layer: 1, x: 5.5, y: 3.5 },
+  { layer: 1, x: 0.5, y: 2.5 }, { layer: 1, x: 5.5, y: 2.5 },
+  { layer: 1, x: 0.5, y: 3.5 }, { layer: 1, x: 1.5, y: 3.5 }, { layer: 1, x: 4.5, y: 3.5 }, { layer: 1, x: 5.5, y: 3.5 },
+  { layer: 1, x: 1.5, y: 4.5 }, { layer: 1, x: 4.5, y: 4.5 },
 
-  // Layer 2: Ichki qal'a (10 ta plitka)
-  { layer: 2, x: 2, y: 1 }, { layer: 2, x: 3, y: 1 }, { layer: 2, x: 4, y: 1 },
+  // Layer 2: Markaziy qal'a (10 ta plitka)
+  { layer: 2, x: 2.5, y: 1 }, { layer: 2, x: 3.5, y: 1 },
   { layer: 2, x: 2, y: 2 }, { layer: 2, x: 3, y: 2 }, { layer: 2, x: 4, y: 2 },
   { layer: 2, x: 2, y: 3 }, { layer: 2, x: 3, y: 3 }, { layer: 2, x: 4, y: 3 },
-  { layer: 2, x: 3, y: 4 },
+  { layer: 2, x: 2.5, y: 4 }, { layer: 2, x: 3.5, y: 4 },
 
-  // Layer 3: Piramida belbog'i (6 ta plitka)
-  { layer: 3, x: 2.5, y: 1.5 }, { layer: 3, x: 3.5, y: 1.5 },
-  { layer: 3, x: 2.5, y: 2.5 }, { layer: 3, x: 3.5, y: 2.5 },
+  // Layer 3: Ichki piramida (6 ta plitka)
+  { layer: 3, x: 2.5, y: 1.8 }, { layer: 3, x: 3.5, y: 1.8 },
+  { layer: 3, x: 3.0, y: 2.5 },
   { layer: 3, x: 2.5, y: 3.2 }, { layer: 3, x: 3.5, y: 3.2 },
+  { layer: 3, x: 3.0, y: 3.8 },
 
-  // Layer 4: Tog' cho'qqisi (4 ta plitka)
-  { layer: 4, x: 2.0, y: 2.0 }, { layer: 4, x: 4.0, y: 2.0 },
-  { layer: 4, x: 3.0, y: 1.8 }, { layer: 4, x: 3.0, y: 2.8 },
+  // Layer 4: Cho'qqi (4 ta plitka)
+  { layer: 4, x: 2.5, y: 2.2 }, { layer: 4, x: 3.5, y: 2.2 },
+  { layer: 4, x: 2.5, y: 3.0 }, { layer: 4, x: 3.5, y: 3.0 },
 
   // Layer 5: Apex — Eng ustki toj (2 ta plitka)
-  { layer: 5, x: 2.7, y: 2.3 }, { layer: 5, x: 3.3, y: 2.3 },
+  { layer: 5, x: 2.8, y: 2.6 }, { layer: 5, x: 3.2, y: 2.6 },
 ];
 
 const OVERLAP_W = 0.92;
@@ -120,28 +133,24 @@ export function shuffleArray(array) {
 }
 
 /**
- * Doskani va pastki stacklarni generatsiya qilish.
- * Qiyinlik rejimi (difficulty): 'hard' | 'normal'
- * - 'hard': 6 qatlamli piramida (60 ta plitka = 20 ta uchtalik), 3 stackda 2 tadan karta.
- * - 'normal': 4 qatlamli (54 ta plitka = 18 ta uchtalik), 3 stackda 3 tadan karta.
+ * Doskani generatsiya qilish.
+ * Barcha plitkalar 100% asosiy doskaga birlashtirilgan.
+ * - 'hard': 60 ta plitka (6 qatlamli Piramida = 20 ta uchtalik)
+ * - 'normal': 54 ta plitka (5 qatlamli = 18 ta uchtalik)
  */
 export function generateGameData(difficulty = 'hard') {
   const isHard = difficulty === 'hard';
-  const activeLayout = isHard ? HARD_BOARD_LAYOUT : BOARD_LAYOUT.slice(0, 45);
-  const boardCount = activeLayout.length; // 54 if hard, 45 if normal
+  const activeLayout = isHard ? HARD_BOARD_LAYOUT : BOARD_LAYOUT;
+  const totalTiles = activeLayout.length; // 60 if hard, 54 if normal
 
-  const cardsPerStack = isHard ? 2 : 3;
-  const stackTotal = 3 * cardsPerStack; // 6 if hard, 9 if normal
-  const totalTiles = boardCount + stackTotal; // 60 if hard, 54 if normal
-
-  // Mevalar basseyini (doimo 3 ga karrali)
+  // Mevalar basseyini (doimo qat'iy 3 ga karrali)
   const pool = [];
   TILE_TYPES.forEach((type, idx) => {
     let count = 6;
     if (isHard) {
-      count = idx < 4 ? 9 : 6; // 4x9 = 36 + 4x6 = 24 => 60 ta
+      count = idx < 4 ? 9 : 6; // 4x9 = 36 + 4x6 = 24 => 60 ta plitka!
     } else {
-      count = idx < 2 ? 9 : 6; // 2x9 = 18 + 6x6 = 36 => 54 ta
+      count = idx < 2 ? 9 : 6; // 2x9 = 18 + 6x6 = 36 => 54 ta plitka!
     }
     for (let c = 0; c < count; c++) {
       pool.push(type);
@@ -159,25 +168,8 @@ export function generateGameData(difficulty = 'hard') {
     y: pos.y,
   }));
 
-  // Pastki 3 ta stack
-  let offset = boardCount;
-  const stacks = [
-    Array.from({ length: cardsPerStack }).map((_, c) => ({
-      id: `stack_0_${c}`,
-      type: shuffled[offset++],
-      layer: c,
-    })),
-    Array.from({ length: cardsPerStack }).map((_, c) => ({
-      id: `stack_1_${c}`,
-      type: shuffled[offset++],
-      layer: c,
-    })),
-    Array.from({ length: cardsPerStack }).map((_, c) => ({
-      id: `stack_2_${c}`,
-      type: shuffled[offset++],
-      layer: c,
-    })),
-  ];
+  // Ortiqcha pastki stacklar endi yo'q — barchasi yaxlit maydonda!
+  const stacks = [[], [], []];
 
   return { boardTiles, stacks, totalTiles, difficulty };
 }

@@ -13,21 +13,25 @@
 .mobile-screen {
   width: 100%;
   max-width: 440px;
-  height: 900px;
+  height: 920px;
   max-height: 98vh;
   position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 36px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 0 8px #1f2937;
-  /* Yumshoq o'rmon / bog' bokeh foni (D:\tile.png dan 1:1) */
+  border-radius: 40px;
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.8), 
+    0 0 0 8px #1e293b,
+    0 0 0 11px #334155,
+    0 0 40px rgba(34, 197, 94, 0.15);
+  /* Bog' / Sehrli o'rmon quyosh nurlari va bokeh foni */
   background: 
-    radial-gradient(circle at 50% 20%, rgba(230, 245, 175, 0.45) 0%, transparent 40%),
-    radial-gradient(circle at 20% 50%, rgba(160, 195, 110, 0.5) 0%, transparent 45%),
-    radial-gradient(circle at 80% 40%, rgba(200, 225, 130, 0.4) 0%, transparent 35%),
-    radial-gradient(circle at 50% 80%, rgba(130, 170, 90, 0.6) 0%, transparent 50%),
-    linear-gradient(180deg, #71894d 0%, #8ca55a 30%, #5d753c 70%, #46592e 100%);
+    radial-gradient(circle at 50% 15%, rgba(240, 253, 190, 0.55) 0%, transparent 45%),
+    radial-gradient(circle at 15% 45%, rgba(163, 230, 53, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 35%, rgba(190, 242, 100, 0.4) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(74, 222, 128, 0.35) 0%, transparent 55%),
+    linear-gradient(180deg, #60803a 0%, #769947 25%, #4f6e2b 65%, #354a1a 100%);
 }
 
 /* 1. TOP BAR */
@@ -126,27 +130,30 @@
 }
 
 .dock-card-bar {
-  background: rgba(30, 38, 44, 0.78);
-  border: 3px solid rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
   padding: 6px 8px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), inset 0 3px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.45), 
+    inset 0 2px 4px rgba(255, 255, 255, 0.35),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: space-between;
-  gap: 4px;
+  gap: 5px;
 }
 
 .dock-cell {
   flex: 1;
-  height: 60px;
-  background: rgba(18, 22, 26, 0.65);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  height: 62px;
+  background: rgba(10, 15, 24, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
 }
 
 /* Dockga tushgan plitka */
@@ -255,44 +262,63 @@
   font-weight: 900;
 }
 
-/* 3. MAIN GAME BOARD */
+/* 3. MAIN GAME BOARD (YAGONALASHGAN 3D ROYAL MAHJONG) */
 .board-section {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
-  padding: 0 10px;
+  overflow: visible;
+  padding: 6px 12px;
 }
 
 .board-matrix {
   position: relative;
   width: 390px;
-  height: 380px;
+  height: 370px;
 }
 
-/* 1:1 PLITKA KARTASI (D:\tile.png uslubi) */
+/* ULTRA-PREMIUM 3D PLITKA (PORCELAIN MAHJONG BLOCK) */
 .board-tile-item {
   position: absolute;
   width: 50px;
   height: 58px;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s, box-shadow 0.2s;
   user-select: none;
+  border-radius: 13px;
 }
 
 .tile-box {
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f4fafd 75%, #d8ecf3 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcfe 65%, #d9edf4 100%);
   border: 1.5px solid #a6d8eb;
   border-bottom: 5px solid #7cb9cf;
-  border-radius: 12px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
   position: relative;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Yaltiroq shisha nuri (Glossy Specular Highlight Line) */
+.tile-box::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  right: 4px;
+  height: 38%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 10px 10px 0 0;
+  pointer-events: none;
+}
+
+/* Meva belgisi soyasi */
+.tile-box svg {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.16));
 }
 
 /* Ochiq (Selectable) */
@@ -301,10 +327,10 @@
 }
 
 .board-tile-item.open:hover .tile-box {
-  transform: translateY(-4px);
-  border-bottom-width: 7px;
-  border-color: #67e8f9;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.3);
+  transform: translateY(-5px);
+  border-bottom-width: 8px;
+  border-color: #38bdf8;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35), 0 0 14px rgba(56, 189, 248, 0.4);
 }
 
 .board-tile-item.open:active .tile-box {
@@ -315,23 +341,43 @@
 /* Qulflangan (Blocked) */
 .board-tile-item.blocked {
   cursor: not-allowed;
-  filter: brightness(0.72) contrast(0.9);
+  filter: brightness(0.68) contrast(0.92);
 }
 
 .board-tile-item.blocked .tile-box {
-  background: linear-gradient(180deg, #dce4e7 0%, #c4d0d5 75%, #a6b5bb 100%);
-  border-color: #92a4ac;
-  border-bottom-color: #6f8087;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg, #d3dee2 0%, #bac8cd 75%, #9cb0b7 100%);
+  border-color: #8da2ab;
+  border-bottom-color: #6c8089;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
 .board-tile-item.blocked::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.25);
-  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 13px;
   pointer-events: none;
+}
+
+/* Qatlam balandlik soyalari (3D Elevation Shadows) */
+.board-tile-item[data-layer="0"] {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+.board-tile-item[data-layer="1"] {
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.32);
+}
+.board-tile-item[data-layer="2"] {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.36);
+}
+.board-tile-item[data-layer="3"] {
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.42);
+}
+.board-tile-item[data-layer="4"] {
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.48);
+}
+.board-tile-item[data-layer="5"] {
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.55);
 }
 
 /* Tebranish (Shake) */
@@ -343,69 +389,6 @@
 
 .board-tile-item.shaking {
   animation: shakeTile 0.3s ease;
-}
-
-/* 4. PASTKI 3 TA TAXLAM (BOTTOM 3 STACKS / DECKS) */
-.bottom-stacks-row {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  padding: 8px 16px 16px;
-  z-index: 10;
-}
-
-.stack-column {
-  width: 54px;
-  height: 68px;
-  position: relative;
-  cursor: pointer;
-}
-
-.stack-card-layer {
-  position: absolute;
-  width: 50px;
-  height: 58px;
-  background: linear-gradient(180deg, #ffffff 0%, #f4fafd 75%, #d8ecf3 100%);
-  border: 1.5px solid #a6d8eb;
-  border-bottom: 5px solid #7cb9cf;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
-  transition: transform 0.15s ease;
-}
-
-.stack-column.empty {
-  cursor: default;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stack-empty-slot {
-  width: 50px;
-  height: 58px;
-  border: 2px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.35);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-slot-mark {
-  font-size: 15px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.22);
-  user-select: none;
-}
-
-.stack-column:hover .stack-card-layer.top-card {
-  transform: translateY(-4px);
-  border-bottom-width: 7px;
-  border-color: #67e8f9;
 }
 
 /* 5. PASTKI BOSHQARUV TUGMALARI (BOTTOM ACTION BAR) */
