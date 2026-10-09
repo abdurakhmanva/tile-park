@@ -1,0 +1,445 @@
+/* TILE PARK: 1:1 MOBILE EDITION (MATCH-3 D:\tile.png REPLICA) */
+
+/* ASOSIY O'YIN RAMKASI (MOBILE ASPECT RATIO CONTAINER) */
+.mobile-app-shell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px 0;
+  background: #111827;
+}
+
+.mobile-screen {
+  width: 100%;
+  max-width: 440px;
+  height: 900px;
+  max-height: 98vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 36px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 0 8px #1f2937;
+  /* Yumshoq o'rmon / bog' bokeh foni (D:\tile.png dan 1:1) */
+  background: 
+    radial-gradient(circle at 50% 20%, rgba(230, 245, 175, 0.45) 0%, transparent 40%),
+    radial-gradient(circle at 20% 50%, rgba(160, 195, 110, 0.5) 0%, transparent 45%),
+    radial-gradient(circle at 80% 40%, rgba(200, 225, 130, 0.4) 0%, transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(130, 170, 90, 0.6) 0%, transparent 50%),
+    linear-gradient(180deg, #71894d 0%, #8ca55a 30%, #5d753c 70%, #46592e 100%);
+}
+
+/* 1. TOP BAR */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 10px;
+  z-index: 20;
+}
+
+/* Palitra tugmasi (Theme button) */
+.btn-palette {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  background: radial-gradient(circle at 35% 35%, #2a6f86 0%, #0c3e4e 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-palette:hover {
+  transform: scale(1.06);
+}
+
+.btn-palette svg {
+  width: 26px;
+  height: 26px;
+  color: #ffffff;
+}
+
+/* Bosqich ko'rsatkichi (Level pill) */
+.level-badge {
+  background: linear-gradient(180deg, #ffffff 0%, #ebf8fc 80%, #d1edf7 100%);
+  border: 3px solid #82c8df;
+  border-bottom: 5px solid #57a6bf;
+  border-radius: 28px;
+  padding: 6px 24px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  font-size: 19px;
+  font-weight: 800;
+  color: #0c4a6e;
+  letter-spacing: -0.2px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Olmoslar paneli (Coins/Gems) */
+.gems-badge {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  padding: 4px 8px 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gems-amount {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.gem-icon {
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
+}
+
+.btn-plus {
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(180deg, #84cc16 0%, #65a30d 100%);
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 2. DOCK BAR (7 SLOTS - YUQORIDA JOYLASHTIRILGAN) */
+.dock-container {
+  padding: 4px 18px 12px;
+  z-index: 20;
+}
+
+.dock-card-bar {
+  background: rgba(30, 38, 44, 0.78);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 6px 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), inset 0 3px 6px rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.dock-cell {
+  flex: 1;
+  height: 60px;
+  background: rgba(18, 22, 26, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Dockga tushgan plitka */
+.dock-placed-tile {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fafd 75%, #d8ecf3 100%);
+  border: 1.5px solid #99d2e5;
+  border-bottom: 4px solid #66acc3;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  animation: tileSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tileSlideIn {
+  from {
+    transform: scale(0.4) translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Portlash (Blast) */
+@keyframes blastOut {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.3); filter: brightness(1.7) drop-shadow(0 0 12px #38bdf8); }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.dock-placed-tile.blasting {
+  animation: blastOut 0.35s forwards;
+}
+
+/* 3. MAIN GAME BOARD */
+.board-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 0 10px;
+}
+
+.board-matrix {
+  position: relative;
+  width: 390px;
+  height: 380px;
+}
+
+/* 1:1 PLITKA KARTASI (D:\tile.png uslubi) */
+.board-tile-item {
+  position: absolute;
+  width: 50px;
+  height: 58px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+  user-select: none;
+}
+
+.tile-box {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fafd 75%, #d8ecf3 100%);
+  border: 1.5px solid #a6d8eb;
+  border-bottom: 5px solid #7cb9cf;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+/* Ochiq (Selectable) */
+.board-tile-item.open {
+  cursor: pointer;
+}
+
+.board-tile-item.open:hover .tile-box {
+  transform: translateY(-4px);
+  border-bottom-width: 7px;
+  border-color: #67e8f9;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.3);
+}
+
+.board-tile-item.open:active .tile-box {
+  transform: translateY(2px);
+  border-bottom-width: 3px;
+}
+
+/* Qulflangan (Blocked) */
+.board-tile-item.blocked {
+  cursor: not-allowed;
+  filter: brightness(0.72) contrast(0.9);
+}
+
+.board-tile-item.blocked .tile-box {
+  background: linear-gradient(180deg, #dce4e7 0%, #c4d0d5 75%, #a6b5bb 100%);
+  border-color: #92a4ac;
+  border-bottom-color: #6f8087;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.board-tile-item.blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.25);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+/* Tebranish (Shake) */
+@keyframes shakeTile {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.board-tile-item.shaking {
+  animation: shakeTile 0.3s ease;
+}
+
+/* 4. PASTKI 3 TA TAXLAM (BOTTOM 3 STACKS / DECKS) */
+.bottom-stacks-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 8px 16px 16px;
+  z-index: 10;
+}
+
+.stack-column {
+  width: 54px;
+  height: 68px;
+  position: relative;
+  cursor: pointer;
+}
+
+.stack-card-layer {
+  position: absolute;
+  width: 50px;
+  height: 58px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fafd 75%, #d8ecf3 100%);
+  border: 1.5px solid #a6d8eb;
+  border-bottom: 5px solid #7cb9cf;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+  transition: transform 0.15s ease;
+}
+
+.stack-column:hover .stack-card-layer.top-card {
+  transform: translateY(-4px);
+  border-bottom-width: 7px;
+  border-color: #67e8f9;
+}
+
+/* 5. PASTKI BOSHQARUV TUGMALARI (BOTTOM ACTION BAR) */
+.action-bar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 14px 24px;
+  z-index: 20;
+}
+
+.action-btn-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Dumaloq moviy action tugmalar */
+.action-circle-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 3.5px solid #ffffff;
+  background: radial-gradient(circle at 35% 35%, #9ae6f7 0%, #46b8d4 50%, #1a839e 100%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 3px 6px rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.action-circle-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+
+.action-circle-btn:active {
+  transform: translateY(2px) scale(0.96);
+}
+
+/* Qizil badge soni */
+.action-count-badge {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Reklama televizori tugmasi */
+.btn-ad-tv {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-ad-tv:hover {
+  transform: scale(1.08);
+}
+
+/* Sozlamalar tugmasi */
+.btn-settings {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3.5px solid #ffffff;
+  background: radial-gradient(circle at 35% 35%, #2a7269 0%, #0d463f 100%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-settings svg {
+  width: 28px;
+  height: 28px;
+  color: #ffffff;
+}
+
+/* MODAL OYNALAR (G'ALABA / MAG'LUBIYAT / SOZLAMALAR) */
+.game-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.82);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: 36px;
+  animation: fadeIn 0.2s ease;
+}
+
+.game-modal-card {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 28px;
+  padding: 30px 24px;
+  width: 85%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modal-btn-confirm {
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  border: 2px solid #86efac;
+  border-bottom: 5px solid #15803d;
+  color: white;
+  padding: 12px 28px;
+  border-radius: 18px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  margin-top: 18px;
+}
