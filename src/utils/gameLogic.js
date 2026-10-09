@@ -35,18 +35,52 @@ export const BOARD_LAYOUT = [
   { layer: 2, x: 1.5, y: 2 }, { layer: 2, x: 4.5, y: 2 },
   { layer: 2, x: 2, y: 3 }, { layer: 2, x: 3, y: 3 }, { layer: 2, x: 4, y: 3 },
 
-  // Layer 3: Eng ustki qatlam (6 ta plitka - boshida ochiq bo'ladi)
+  // Layer 3: Eng ustki qatlam (6 ta plitka)
   { layer: 3, x: 2.5, y: 1.5 }, { layer: 3, x: 3.5, y: 1.5 },
   { layer: 3, x: 2.0, y: 2.2 }, { layer: 3, x: 3.0, y: 2.0 }, { layer: 3, x: 4.0, y: 2.2 },
   { layer: 3, x: 3.0, y: 2.8 },
 ];
 
-const OVERLAP_W = 0.95;
-const OVERLAP_H = 0.95;
-
 /**
- * Ustki qatlamdagi plitka ostki qatlamdagi plitkani to'sib turganini tekshirish.
+ * 6 QATLAMLI QIYINLASHTIRILGAN PIRAMIDA SXEMASI (54 ta plitka)
+ * Yuqori zichlikdagi Mahjong qal'asi — chuqur bog'liqliklar va xavfli to'siqlar!
  */
+export const HARD_BOARD_LAYOUT = [
+  // Layer 0: Asosiy poydevor (18 ta plitka)
+  { layer: 0, x: 0, y: 0 }, { layer: 0, x: 1, y: 0 }, { layer: 0, x: 2, y: 0 }, { layer: 0, x: 4, y: 0 }, { layer: 0, x: 5, y: 0 }, { layer: 0, x: 6, y: 0 },
+  { layer: 0, x: 0, y: 1 }, { layer: 0, x: 6, y: 1 },
+  { layer: 0, x: 0, y: 2 }, { layer: 0, x: 6, y: 2 },
+  { layer: 0, x: 0, y: 3 }, { layer: 0, x: 6, y: 3 },
+  { layer: 0, x: 0, y: 4 }, { layer: 0, x: 1, y: 4 }, { layer: 0, x: 2, y: 4 }, { layer: 0, x: 4, y: 4 }, { layer: 0, x: 5, y: 4 }, { layer: 0, x: 6, y: 4 },
+
+  // Layer 1: O'rta qatlam (14 ta plitka)
+  { layer: 1, x: 0.5, y: 0.5 }, { layer: 1, x: 1.5, y: 0.5 }, { layer: 1, x: 4.5, y: 0.5 }, { layer: 1, x: 5.5, y: 0.5 },
+  { layer: 1, x: 0.5, y: 1.5 }, { layer: 1, x: 1.5, y: 1.5 }, { layer: 1, x: 4.5, y: 1.5 }, { layer: 1, x: 5.5, y: 1.5 },
+  { layer: 1, x: 0.5, y: 2.5 }, { layer: 1, x: 1.5, y: 2.5 }, { layer: 1, x: 4.5, y: 2.5 }, { layer: 1, x: 5.5, y: 2.5 },
+  { layer: 1, x: 0.5, y: 3.5 }, { layer: 1, x: 5.5, y: 3.5 },
+
+  // Layer 2: Ichki qal'a (10 ta plitka)
+  { layer: 2, x: 2, y: 1 }, { layer: 2, x: 3, y: 1 }, { layer: 2, x: 4, y: 1 },
+  { layer: 2, x: 2, y: 2 }, { layer: 2, x: 3, y: 2 }, { layer: 2, x: 4, y: 2 },
+  { layer: 2, x: 2, y: 3 }, { layer: 2, x: 3, y: 3 }, { layer: 2, x: 4, y: 3 },
+  { layer: 2, x: 3, y: 4 },
+
+  // Layer 3: Piramida belbog'i (6 ta plitka)
+  { layer: 3, x: 2.5, y: 1.5 }, { layer: 3, x: 3.5, y: 1.5 },
+  { layer: 3, x: 2.5, y: 2.5 }, { layer: 3, x: 3.5, y: 2.5 },
+  { layer: 3, x: 2.5, y: 3.2 }, { layer: 3, x: 3.5, y: 3.2 },
+
+  // Layer 4: Tog' cho'qqisi (4 ta plitka)
+  { layer: 4, x: 2.0, y: 2.0 }, { layer: 4, x: 4.0, y: 2.0 },
+  { layer: 4, x: 3.0, y: 1.8 }, { layer: 4, x: 3.0, y: 2.8 },
+
+  // Layer 5: Apex — Eng ustki toj (2 ta plitka)
+  { layer: 5, x: 2.7, y: 2.3 }, { layer: 5, x: 3.3, y: 2.3 },
+];
+
+const OVERLAP_W = 0.92;
+const OVERLAP_H = 0.92;
+
 export function isTileBlocked(tile, allTiles) {
   for (const other of allTiles) {
     if (other.id !== tile.id && other.layer > tile.layer) {
@@ -86,29 +120,37 @@ export function shuffleArray(array) {
 }
 
 /**
- * Doskani va pastki 3 ta stack (zaxira)ni generatsiya qilish.
- * Jami plitkalar soni doimo 3 ga karrali (54 ta plitka = 18 ta uchtalik) bo'ladi!
+ * Doskani va pastki stacklarni generatsiya qilish.
+ * Qiyinlik rejimi (difficulty): 'hard' | 'normal'
+ * - 'hard': 6 qatlamli piramida (60 ta plitka = 20 ta uchtalik), 3 stackda 2 tadan karta.
+ * - 'normal': 4 qatlamli (54 ta plitka = 18 ta uchtalik), 3 stackda 3 tadan karta.
  */
-export function generateGameData() {
-  const activeLayout = BOARD_LAYOUT.slice(0, 45); // 45 ta maydonda plitka
+export function generateGameData(difficulty = 'hard') {
+  const isHard = difficulty === 'hard';
+  const activeLayout = isHard ? HARD_BOARD_LAYOUT : BOARD_LAYOUT.slice(0, 45);
+  const boardCount = activeLayout.length; // 54 if hard, 45 if normal
 
-  // 54 ta plitka uchun mevalar basseyini:
-  // Har doim 3 ga karrali qat'iy uchtaliklar!
-  // 6 ta turdan 6 tadan = 36 ta
-  // 2 ta turdan 9 tadan = 18 ta
-  // Jami: 36 + 18 = 54 ta (18 x 3)
+  const cardsPerStack = isHard ? 2 : 3;
+  const stackTotal = 3 * cardsPerStack; // 6 if hard, 9 if normal
+  const totalTiles = boardCount + stackTotal; // 60 if hard, 54 if normal
+
+  // Mevalar basseyini (doimo 3 ga karrali)
   const pool = [];
   TILE_TYPES.forEach((type, idx) => {
-    const count = idx < 6 ? 6 : 9;
+    let count = 6;
+    if (isHard) {
+      count = idx < 4 ? 9 : 6; // 4x9 = 36 + 4x6 = 24 => 60 ta
+    } else {
+      count = idx < 2 ? 9 : 6; // 2x9 = 18 + 6x6 = 36 => 54 ta
+    }
     for (let c = 0; c < count; c++) {
       pool.push(type);
     }
   });
 
-  // Mukammal Fisher-Yates aralashtirish
   const shuffled = shuffleArray(pool);
 
-  // Maydon plitkalari (45 ta)
+  // Maydon plitkalari
   const boardTiles = activeLayout.map((pos, i) => ({
     id: `board_${i + 1}`,
     type: shuffled[i],
@@ -117,27 +159,27 @@ export function generateGameData() {
     y: pos.y,
   }));
 
-  // Pastki 3 ta stack (har birida 3 tadan = 9 ta plitka)
-  let offset = 45;
+  // Pastki 3 ta stack
+  let offset = boardCount;
   const stacks = [
-    [
-      { id: `stack_0_0`, type: shuffled[offset++], layer: 0 },
-      { id: `stack_0_1`, type: shuffled[offset++], layer: 1 },
-      { id: `stack_0_2`, type: shuffled[offset++], layer: 2 },
-    ],
-    [
-      { id: `stack_1_0`, type: shuffled[offset++], layer: 0 },
-      { id: `stack_1_1`, type: shuffled[offset++], layer: 1 },
-      { id: `stack_1_2`, type: shuffled[offset++], layer: 2 },
-    ],
-    [
-      { id: `stack_2_0`, type: shuffled[offset++], layer: 0 },
-      { id: `stack_2_1`, type: shuffled[offset++], layer: 1 },
-      { id: `stack_2_2`, type: shuffled[offset++], layer: 2 },
-    ],
+    Array.from({ length: cardsPerStack }).map((_, c) => ({
+      id: `stack_0_${c}`,
+      type: shuffled[offset++],
+      layer: c,
+    })),
+    Array.from({ length: cardsPerStack }).map((_, c) => ({
+      id: `stack_1_${c}`,
+      type: shuffled[offset++],
+      layer: c,
+    })),
+    Array.from({ length: cardsPerStack }).map((_, c) => ({
+      id: `stack_2_${c}`,
+      type: shuffled[offset++],
+      layer: c,
+    })),
   ];
 
-  return { boardTiles, stacks };
+  return { boardTiles, stacks, totalTiles, difficulty };
 }
 
 /**

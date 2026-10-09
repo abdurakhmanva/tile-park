@@ -186,6 +186,75 @@
   animation: blastOut 0.35s forwards;
 }
 
+/* 6/7 Slot xavf signali */
+.dock-card-bar.danger-pulse {
+  border-color: #ef4444;
+  animation: pulseDockDanger 0.75s infinite alternate ease-in-out;
+}
+
+@keyframes pulseDockDanger {
+  from {
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6), inset 0 0 6px rgba(239, 68, 68, 0.4);
+  }
+  to {
+    border-color: #fca5a5;
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.95), inset 0 0 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
+.dock-danger-badge {
+  margin-top: 4px;
+  background: rgba(225, 29, 72, 0.9);
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: shakeDanger 0.4s infinite alternate ease-in-out;
+}
+
+@keyframes shakeDanger {
+  0% { transform: scale(0.98); }
+  100% { transform: scale(1.02); }
+}
+
+/* Combo Streak Badge */
+.combo-streak-badge {
+  margin-top: 4px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: 14px;
+  letter-spacing: 0.5px;
+  border: 1.5px solid #fef08a;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+  animation: popCombo 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popCombo {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.hard-fire-badge {
+  font-size: 11px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  font-weight: 900;
+}
+
 /* 3. MAIN GAME BOARD */
 .board-section {
   flex: 1;

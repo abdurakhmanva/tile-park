@@ -54,6 +54,21 @@ export default function App() {
     } catch {}
   }, [gems]);
 
+  // Qiyinlik darajasi: 'hard' (standart qilib qiyinlashtirildi) | 'normal'
+  const [difficulty, setDifficulty] = useState(() => {
+    try {
+      return localStorage.getItem('tile_park_diff') || 'hard';
+    } catch {
+      return 'hard';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tile_park_diff', difficulty);
+    } catch {}
+  }, [difficulty]);
+
   // O'yin ma'lumotlari: maydon plitkalari va pastki 3 ta stack
   const [boardTiles, setBoardTiles] = useState([]);
   const [stacks, setStacks] = useState([[], [], []]);
@@ -63,6 +78,10 @@ export default function App() {
   const [undoCount, setUndoCount] = useState(3);
   const [magnetCount, setMagnetCount] = useState(2);
   const [shuffleCount, setShuffleCount] = useState(2);
+
+  // Combo hisoblagichi
+  const [combo, setCombo] = useState(0);
+  const lastMatchTimeRef = useRef(0);
 
   // Tarix (Undo uchun)
   const [history, setHistory] = useState([]);
@@ -87,13 +106,13 @@ export default function App() {
   const blastTimerRef = useRef(null);
 
   // O'yinni boshlash / qayta ishga tushirish
-  const startNewGame = () => {
+  const startNewGame = (customDiff = difficulty) => {
     if (blastTimerRef.current) {
       clearTimeout(blastTimerRef.current);
       blastTimerRef.current = null;
     }
 
-    const data = generateGameData();
+    const data = generateGameData(customDiff);
     stateRef.current = {
       boardTiles: data.boardTiles,
       stacks: data.stacks,
@@ -109,6 +128,7 @@ export default function App() {
     setGameStatus('playing');
     setBlastingType(null);
     setIsProcessing(false);
+    setCombo(0);
   };
 
   useEffect(() => {
@@ -116,7 +136,7 @@ export default function App() {
     return () => {
       if (blastTimerRef.current) clearTimeout(blastTimerRef.current);
     };
-  }, [level]);
+  }, [level, difficulty]);
 
   // Snapshot saqlash (Undo uchun)
   const saveSnapshot = () => {
@@ -178,6 +198,18 @@ export default function App() {
     const { matched, remaining } = checkMatch(updatedDock);
 
     if (matched) {
+      // Combo hisoblash (4 soniya ichidagi ketma-ketlik)
+      const now = Date.now();
+      let nextCombo = 1;
+      if (now - lastMatchTimeRef.current < 4500) {
+        nextCombo = combo + 1;
+      }
+      setCombo(nextCombo);
+      lastMatchTimeRef.current = now;
+      if (nextCombo > 1) {
+        setGems((g) => g + nextCombo * 5); // Har bir ketma-ketlik uchun bonus olmos!
+      }
+
       setDockSlots(updatedDock);
       setBlastingType(matched);
       setIsProcessing(true);
@@ -490,7 +522,10 @@ export default function App() {
           </button>
 
           {/* Bosqich (Level) badge */}
-          <div className="level-badge">Уровень {level}</div>
+          <div className="level-badge flex items-center justify-center">
+            <span>Уровень {level}</span>
+            {difficulty === 'hard' && <span className="hard-fire-badge">🔥 HARD</span>}
+          </div>
 
           {/* Olmoslar (Gems) */}
           <div className="gems-badge">
@@ -504,7 +539,11 @@ export default function App() {
 
         {/* 2. DOCK BAR (7 SLOTS - AYNAN TEPADA JOYLASHTIRILGAN!) */}
         <div className="dock-container">
-          <div className="dock-card-bar">
+          <div
+            className={`dock-card-bar ${
+              dockSlots.length === 6 ? 'danger-pulse' : ''
+            }`}
+          >
             {Array.from({ length: 7 }).map((_, index) => {
               const tile = dockSlots[index];
               const isBlasting = tile && blastingType === tile.type;
@@ -524,6 +563,20 @@ export default function App() {
               );
             })}
           </div>
+
+          {/* 6/7 xavf signali */}
+          {dockSlots.length === 6 && (
+            <div className="dock-danger-badge">
+              ⚠️ XAVF: 1 TA BO'SH JOY QOLDI!
+            </div>
+          )}
+
+          {/* Combo seriyasi */}
+          {combo > 1 && (
+            <div className="combo-streak-badge">
+              COMBO x{combo}! 🔥 (+{combo * 5} 💎)
+            </div>
+          )}
         </div>
 
         {/* 3. MAYDON (BOARD - 4 QATLAMLI MAHJONG TARTIBI) */}
@@ -749,6 +802,41 @@ export default function App() {
                 >
                   {soundOn ? <Volume2 size={20} /> : <VolumeX size={20} />}
                 </button>
+              </div>
+
+              {/* Qiyinlik darajasi tanlovi */}
+              <div className="bg-slate-800/60 p-3 rounded-xl mb-3 text-left">
+                <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                  Qiyinlik darajasi
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all ${
+                      difficulty === 'normal'
+                        ? 'bg-sky-600 text-white shadow-md'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                    onClick={() => {
+                      setDifficulty('normal');
+                      startNewGame('normal');
+                    }}
+                  >
+                    Oddiy (4 qatlam)
+                  </button>
+                  <button
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all ${
+                      difficulty === 'hard'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                    onClick={() => {
+                      setDifficulty('hard');
+                      startNewGame('hard');
+                    }}
+                  >
+                    🔥 Qiyin (6 qatlam)
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-between items-center bg-slate-800/60 p-3 rounded-xl mb-4">
