@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Settings,
@@ -18,20 +18,48 @@ import {
   isTileBlocked,
   addTileToDock,
   checkMatch,
+  shuffleArray,
 } from './utils/gameLogic';
 import { sound } from './utils/audio';
 import './App.css';
 
 export default function App() {
-  const [level, setLevel] = useState(15);
-  const [gems, setGems] = useState(200);
+  const [level, setLevel] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tile_park_level');
+      return saved ? parseInt(saved, 10) : 15;
+    } catch {
+      return 15;
+    }
+  });
+
+  const [gems, setGems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tile_park_gems');
+      return saved ? parseInt(saved, 10) : 200;
+    } catch {
+      return 200;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tile_park_level', level.toString());
+    } catch {}
+  }, [level]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tile_park_gems', gems.toString());
+    } catch {}
+  }, [gems]);
 
   // O'yin ma'lumotlari: maydon plitkalari va pastki 3 ta stack
   const [boardTiles, setBoardTiles] = useState([]);
   const [stacks, setStacks] = useState([[], [], []]);
   const [dockSlots, setDockSlots] = useState([]);
 
-  // Booster hisoblagichlari (rasmdagi badge ko'rsatkichlari)
+  // Booster hisoblagichlari
   const [undoCount, setUndoCount] = useState(3);
   const [magnetCount, setMagnetCount] = useState(2);
   const [shuffleCount, setShuffleCount] = useState(2);
@@ -40,25 +68,54 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [shakingId, setShakingId] = useState(null);
   const [blastingType, setBlastingType] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
 
   // Modallar
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
 
+  // Poyga (Race condition) va plitkalar yo'qolishini oldini oluvchi sinxron ref
+  const stateRef = useRef({
+    boardTiles: [],
+    stacks: [[], [], []],
+    dockSlots: [],
+    isProcessing: false,
+    gameStatus: 'playing',
+  });
+
+  const blastTimerRef = useRef(null);
+
   // O'yinni boshlash / qayta ishga tushirish
   const startNewGame = () => {
+    if (blastTimerRef.current) {
+      clearTimeout(blastTimerRef.current);
+      blastTimerRef.current = null;
+    }
+
     const data = generateGameData();
+    stateRef.current = {
+      boardTiles: data.boardTiles,
+      stacks: data.stacks,
+      dockSlots: [],
+      isProcessing: false,
+      gameStatus: 'playing',
+    };
+
     setBoardTiles(data.boardTiles);
     setStacks(data.stacks);
     setDockSlots([]);
     setHistory([]);
     setGameStatus('playing');
     setBlastingType(null);
+    setIsProcessing(false);
   };
 
   useEffect(() => {
     startNewGame();
+    return () => {
+      if (blastTimerRef.current) clearTimeout(blastTimerRef.current);
+    };
   }, [level]);
 
   // Snapshot saqlash (Undo uchun)
@@ -66,61 +123,65 @@ export default function App() {
     setHistory((prev) => [
       ...prev,
       {
-        boardTiles: JSON.parse(JSON.stringify(boardTiles)),
-        stacks: JSON.parse(JSON.stringify(stacks)),
-        dockSlots: [...dockSlots],
+        boardTiles: JSON.parse(JSON.stringify(stateRef.current.boardTiles)),
+        stacks: JSON.parse(JSON.stringify(stateRef.current.stacks)),
+        dockSlots: [...stateRef.current.dockSlots],
       },
     ]);
   };
 
-  // 1. Maydondagi plitkani bosish
-  const handleBoardTileClick = (tile) => {
-    if (gameStatus !== 'playing') return;
+  // Plitkani tanlash va Dockga joylash (Sinxron va 100% xavfsiz)
+  const processTileSelection = (tile, source) => {
+    if (stateRef.current.gameStatus !== 'playing') return;
+    if (stateRef.current.isProcessing) return; // Portlash paytida bloklash
+    if (stateRef.current.dockSlots.length >= 7) return; // Dock to'lgan
 
-    if (isTileBlocked(tile, boardTiles)) {
-      sound.playLocked();
-      setShakingId(tile.id);
-      setTimeout(() => setShakingId(null), 350);
-      return;
+    if (source.type === 'board') {
+      if (isTileBlocked(tile, stateRef.current.boardTiles)) {
+        sound.playLocked();
+        setShakingId(tile.id);
+        setTimeout(() => setShakingId(null), 350);
+        return;
+      }
     }
 
+    // Undo uchun saqlash
     saveSnapshot();
     sound.playClick();
 
-    // Maydondan olib tashlash
-    const updatedBoard = boardTiles.filter((t) => t.id !== tile.id);
-    setBoardTiles(updatedBoard);
+    // 1. Manzilidan olib tashlash
+    let nextBoard = stateRef.current.boardTiles;
+    let nextStacks = stateRef.current.stacks;
 
-    // Dockga joylash va match tekshirish
-    processDockAddition(tile, updatedBoard, stacks);
-  };
+    if (source.type === 'board') {
+      nextBoard = nextBoard.filter((t) => t.id !== tile.id);
+    } else if (source.type === 'stack') {
+      const sIdx = source.stackIdx;
+      nextStacks = nextStacks.map((s, idx) =>
+        idx === sIdx ? s.slice(0, -1) : s
+      );
+    }
 
-  // 2. Pastki 3 ta taxlamdagi (stack) ustki kartani bosish
-  const handleStackClick = (stackIdx) => {
-    if (gameStatus !== 'playing') return;
-    const stack = stacks[stackIdx];
-    if (stack.length === 0) return;
+    // 2. Dockga joylash va guruhlash
+    const updatedDock = addTileToDock(stateRef.current.dockSlots, tile);
 
-    saveSnapshot();
-    sound.playClick();
+    // 3. Sinxron refni darhol yangilash (Race condition bartaraf etildi)
+    stateRef.current.boardTiles = nextBoard;
+    stateRef.current.stacks = nextStacks;
+    stateRef.current.dockSlots = updatedDock;
 
-    // Eng ustki kartani olish
-    const topTile = stack[stack.length - 1];
-    const newStacks = [...stacks];
-    newStacks[stackIdx] = stack.slice(0, -1);
-    setStacks(newStacks);
+    // 4. React state-ni yangilash
+    setBoardTiles(nextBoard);
+    setStacks(nextStacks);
 
-    processDockAddition(topTile, boardTiles, newStacks);
-  };
-
-  // Dockga plitka qo'shish va guruhlash umumiy jarayoni
-  const processDockAddition = (tile, currentBoard, currentStacks) => {
-    const updatedDock = addTileToDock(dockSlots, tile);
-
+    // 5. 3 talik moslikni tekshirish
     const { matched, remaining } = checkMatch(updatedDock);
 
     if (matched) {
+      setDockSlots(updatedDock);
       setBlastingType(matched);
+      setIsProcessing(true);
+      stateRef.current.isProcessing = true;
       sound.playMatch();
 
       confetti({
@@ -129,47 +190,76 @@ export default function App() {
         origin: { y: 0.2 },
       });
 
-      setTimeout(() => {
+      blastTimerRef.current = setTimeout(() => {
+        stateRef.current.dockSlots = remaining;
+        stateRef.current.isProcessing = false;
         setDockSlots(remaining);
         setBlastingType(null);
+        setIsProcessing(false);
+        blastTimerRef.current = null;
 
-        // G'alaba sharti: maydon va barcha stacklar tozalangan bo'lsa
+        // G'alaba yoki Deadlock tekshiruvi
         const totalRemaining =
-          currentBoard.length +
-          currentStacks[0].length +
-          currentStacks[1].length +
-          currentStacks[2].length;
+          nextBoard.length +
+          nextStacks[0].length +
+          nextStacks[1].length +
+          nextStacks[2].length;
 
-        if (totalRemaining === 0 && remaining.length === 0) {
-          handleWin();
+        if (totalRemaining === 0) {
+          if (remaining.length === 0) {
+            handleWin();
+          } else {
+            sound.playGameOver();
+            setGameStatus('lost');
+            stateRef.current.gameStatus = 'lost';
+          }
         }
       }, 300);
     } else {
       setDockSlots(updatedDock);
 
-      // Mag'lubiyat: dock 7 taga to'lib qolsa
+      // 7 taga to'lib qolsa mag'lubiyat
       if (updatedDock.length >= 7) {
         sound.playGameOver();
         setGameStatus('lost');
+        stateRef.current.gameStatus = 'lost';
         return;
       }
 
-      // Doska tozalangan bo'lsa
+      // Maydonda hech narsa qolmagan bo'lsa
       const totalRemaining =
-        currentBoard.length +
-        currentStacks[0].length +
-        currentStacks[1].length +
-        currentStacks[2].length;
+        nextBoard.length +
+        nextStacks[0].length +
+        nextStacks[1].length +
+        nextStacks[2].length;
 
-      if (totalRemaining === 0 && updatedDock.length === 0) {
-        handleWin();
+      if (totalRemaining === 0) {
+        if (updatedDock.length === 0) {
+          handleWin();
+        } else {
+          sound.playGameOver();
+          setGameStatus('lost');
+          stateRef.current.gameStatus = 'lost';
+        }
       }
     }
+  };
+
+  const handleBoardTileClick = (tile) => {
+    processTileSelection(tile, { type: 'board' });
+  };
+
+  const handleStackClick = (stackIdx) => {
+    const stack = stateRef.current.stacks[stackIdx];
+    if (!stack || stack.length === 0) return;
+    const topTile = stack[stack.length - 1];
+    processTileSelection(topTile, { type: 'stack', stackIdx });
   };
 
   const handleWin = () => {
     sound.playWin();
     setGameStatus('won');
+    stateRef.current.gameStatus = 'won';
     setGems((g) => g + 50);
 
     confetti({
@@ -179,15 +269,30 @@ export default function App() {
     });
   };
 
-  // BOOSTER 1: Undo (Sariq o'q)
+  // BOOSTER 1: Undo (Orqaga qaytarish)
   const handleUndoBooster = () => {
     if (history.length === 0 || undoCount <= 0 || gameStatus === 'won') return;
 
+    if (blastTimerRef.current) {
+      clearTimeout(blastTimerRef.current);
+      blastTimerRef.current = null;
+    }
+
     sound.playUndo();
     setUndoCount((c) => c - 1);
+    setBlastingType(null);
+    setIsProcessing(false);
 
     const lastState = history[history.length - 1];
     setHistory((prev) => prev.slice(0, -1));
+
+    stateRef.current = {
+      boardTiles: lastState.boardTiles,
+      stacks: lastState.stacks,
+      dockSlots: lastState.dockSlots,
+      isProcessing: false,
+      gameStatus: 'playing',
+    };
 
     setBoardTiles(lastState.boardTiles);
     setStacks(lastState.stacks);
@@ -195,52 +300,172 @@ export default function App() {
     setGameStatus('playing');
   };
 
-  // BOOSTER 2: Magnet (Avtomatik 3 talik moslikni terish)
+  // BOOSTER 2: Magnet (Haqiqiy Match-3 Avtomatik terish)
   const handleMagnetBooster = () => {
-    if (magnetCount <= 0 || gameStatus !== 'playing') return;
+    if (magnetCount <= 0 || gameStatus !== 'playing' || isProcessing) return;
 
-    // Mavjud ochiq plitkalar yoki dockdagi mevalarni qidirish
-    const openBoardTiles = boardTiles.filter((t) => !isTileBlocked(t, boardTiles));
-    const allAvailable = [
-      ...openBoardTiles,
-      ...stacks.map((s) => s[s.length - 1]).filter(Boolean),
-    ];
+    const currentBoard = stateRef.current.boardTiles;
+    const currentStacks = stateRef.current.stacks;
+    const currentDock = stateRef.current.dockSlots;
 
-    // Dockdagi mevalardan qaysi biri ko'proq?
+    // Dockdagi turlar hisobi
     const dockCounts = {};
-    dockSlots.forEach((t) => {
+    currentDock.forEach((t) => {
       dockCounts[t.type] = (dockCounts[t.type] || 0) + 1;
     });
 
-    let targetType = Object.keys(dockCounts)[0] || allAvailable[0]?.type;
-    if (!targetType) return;
+    const sortedDockTypes = Object.entries(dockCounts).sort((a, b) => b[1] - a[1]);
+    let targetType = null;
+    let needed = 3;
 
-    // Doskadan shu turdagi bitta ochiq mevani topib olish
-    const candidate = allAvailable.find((t) => t.type === targetType);
-    if (candidate) {
-      setMagnetCount((c) => c - 1);
-      sound.playMatch();
-      if (candidate.id.startsWith('board_')) {
-        handleBoardTileClick(candidate);
-      } else {
-        const stackIdx = stacks.findIndex((s) => s[s.length - 1]?.id === candidate.id);
-        if (stackIdx !== -1) handleStackClick(stackIdx);
+    // 1-navbatda dockda bor mevani 3 taga to'ldirish
+    for (const [type, count] of sortedDockTypes) {
+      const inBoard = currentBoard.filter((t) => t.type === type).length;
+      const inStacks = currentStacks.reduce(
+        (sum, s) => sum + s.filter((t) => t.type === type).length,
+        0
+      );
+      if (count + inBoard + inStacks >= 3) {
+        targetType = type;
+        needed = 3 - count;
+        break;
       }
+    }
+
+    // Agar dock bo'sh bo'lsa yoki mos kelmasa, maydondan ixtiyoriy 3 talik topish
+    if (!targetType) {
+      const allCounts = {};
+      currentBoard.forEach((t) => {
+        allCounts[t.type] = (allCounts[t.type] || 0) + 1;
+      });
+      currentStacks.forEach((s) => {
+        s.forEach((t) => {
+          allCounts[t.type] = (allCounts[t.type] || 0) + 1;
+        });
+      });
+      for (const [type, count] of Object.entries(allCounts)) {
+        if (count >= 3) {
+          targetType = type;
+          needed = 3;
+          break;
+        }
+      }
+    }
+
+    if (!targetType) return;
+    if (currentDock.length + needed > 7) return; // Joy yetmasa o'tkazmaydi
+
+    saveSnapshot();
+    setMagnetCount((c) => c - 1);
+    sound.playMatch();
+
+    const pulled = [];
+    let updatedBoard = [...currentBoard];
+    let updatedStacks = currentStacks.map((s) => [...s]);
+
+    // Ochiq maydon plitkalaridan olish
+    for (let i = updatedBoard.length - 1; i >= 0 && pulled.length < needed; i--) {
+      const t = updatedBoard[i];
+      if (t.type === targetType && !isTileBlocked(t, updatedBoard)) {
+        pulled.push(t);
+        updatedBoard.splice(i, 1);
+      }
+    }
+
+    // Stacklar ustidan olish
+    for (let sIdx = 0; sIdx < updatedStacks.length && pulled.length < needed; sIdx++) {
+      const s = updatedStacks[sIdx];
+      if (s.length > 0 && s[s.length - 1].type === targetType) {
+        pulled.push(s.pop());
+      }
+    }
+
+    // Qolganini maydonning boshqa qatlamlaridan olish
+    for (let i = updatedBoard.length - 1; i >= 0 && pulled.length < needed; i--) {
+      const t = updatedBoard[i];
+      if (t.type === targetType) {
+        pulled.push(t);
+        updatedBoard.splice(i, 1);
+      }
+    }
+
+    // Qolganini stacklar ichidan olish
+    for (let sIdx = 0; sIdx < updatedStacks.length && pulled.length < needed; sIdx++) {
+      const s = updatedStacks[sIdx];
+      for (let i = s.length - 1; i >= 0 && pulled.length < needed; i--) {
+        if (s[i].type === targetType) {
+          pulled.push(s.splice(i, 1)[0]);
+        }
+      }
+    }
+
+    let updatedDock = [...currentDock];
+    for (const t of pulled) {
+      updatedDock = addTileToDock(updatedDock, t);
+    }
+
+    stateRef.current.boardTiles = updatedBoard;
+    stateRef.current.stacks = updatedStacks;
+    stateRef.current.dockSlots = updatedDock;
+    stateRef.current.isProcessing = true;
+    setIsProcessing(true);
+
+    setBoardTiles(updatedBoard);
+    setStacks(updatedStacks);
+    setDockSlots(updatedDock);
+
+    const { matched, remaining } = checkMatch(updatedDock);
+    if (matched) {
+      setBlastingType(matched);
+      confetti({ particleCount: 35, spread: 70, origin: { y: 0.2 } });
+
+      blastTimerRef.current = setTimeout(() => {
+        stateRef.current.dockSlots = remaining;
+        stateRef.current.isProcessing = false;
+        setDockSlots(remaining);
+        setBlastingType(null);
+        setIsProcessing(false);
+        blastTimerRef.current = null;
+
+        const totalRemaining =
+          updatedBoard.length +
+          updatedStacks[0].length +
+          updatedStacks[1].length +
+          updatedStacks[2].length;
+
+        if (totalRemaining === 0) {
+          if (remaining.length === 0) {
+            handleWin();
+          } else {
+            sound.playGameOver();
+            setGameStatus('lost');
+            stateRef.current.gameStatus = 'lost';
+          }
+        }
+      }, 300);
     }
   };
 
   // BOOSTER 3: Shuffle (Maydondagi mevalarni qayta aralashtirish)
   const handleShuffleBooster = () => {
-    if (shuffleCount <= 0 || gameStatus !== 'playing' || boardTiles.length === 0) return;
+    if (
+      shuffleCount <= 0 ||
+      gameStatus !== 'playing' ||
+      isProcessing ||
+      boardTiles.length === 0
+    )
+      return;
 
     setShuffleCount((c) => c - 1);
     sound.playUndo();
 
-    const types = boardTiles.map((t) => t.type).sort(() => Math.random() - 0.5);
+    const types = shuffleArray(boardTiles.map((t) => t.type));
     const shuffledBoard = boardTiles.map((tile, i) => ({
       ...tile,
       type: types[i],
     }));
+
+    stateRef.current.boardTiles = shuffledBoard;
     setBoardTiles(shuffledBoard);
   };
 
@@ -338,8 +563,10 @@ export default function App() {
           {stacks.map((stack, stackIdx) => {
             if (stack.length === 0) {
               return (
-                <div key={stackIdx} className="stack-column opacity-30">
-                  <div className="stack-card-layer" />
+                <div key={stackIdx} className="stack-column empty">
+                  <div className="stack-empty-slot">
+                    <span className="empty-slot-mark">✓</span>
+                  </div>
                 </div>
               );
             }
@@ -398,7 +625,7 @@ export default function App() {
             <button
               className="action-circle-btn"
               onClick={handleUndoBooster}
-              disabled={undoCount <= 0 || history.length === 0}
+              disabled={undoCount <= 0 || history.length === 0 || isProcessing}
               title="Orqaga qaytarish (Undo)"
             >
               <Undo2 size={28} color="#fde047" strokeWidth={3.5} />
@@ -411,7 +638,7 @@ export default function App() {
             <button
               className="action-circle-btn"
               onClick={handleMagnetBooster}
-              disabled={magnetCount <= 0}
+              disabled={magnetCount <= 0 || isProcessing}
               title="Magnit (Match-3 yig'ish)"
             >
               <Magnet size={28} color="#c084fc" strokeWidth={3} />
@@ -424,7 +651,7 @@ export default function App() {
             <button
               className="action-circle-btn"
               onClick={handleShuffleBooster}
-              disabled={shuffleCount <= 0}
+              disabled={shuffleCount <= 0 || isProcessing || boardTiles.length === 0}
               title="Aralashtirish (Shuffle)"
             >
               <RefreshCw size={26} color="#a855f7" strokeWidth={3} />
@@ -475,7 +702,9 @@ export default function App() {
                 ПРОИГРЫШ!
               </h2>
               <p className="text-sm text-slate-300 mb-4">
-                Slotlaringiz 7 taga to'lib qoldi.
+                {dockSlots.length >= 7
+                  ? "Slotlaringiz 7 taga to'lib qoldi."
+                  : "Mos keluvchi plitkalar qolmadi."}
               </p>
               <div className="flex gap-3 justify-center">
                 <button

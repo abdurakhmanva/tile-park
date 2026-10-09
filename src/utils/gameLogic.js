@@ -76,24 +76,27 @@ export function getBlockers(tile, allTiles) {
   return blockers;
 }
 
+export function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 /**
  * Doskani va pastki 3 ta stack (zaxira)ni generatsiya qilish.
- * Jami plitkalar soni doimo 3 ga karrali bo'ladi!
+ * Jami plitkalar soni doimo 3 ga karrali (54 ta plitka = 18 ta uchtalik) bo'ladi!
  */
 export function generateGameData() {
-  const boardCount = BOARD_LAYOUT.length; // 44 ta plitka
-  // Har bir pastki stackda 3 tadan karta bo'ladi = 9 ta plitka
-  // Jami: 44 + 9 = 53 ta? 53 ta 3 ga bo'linmaydi (53 % 3 = 2).
-  // Shuning uchun doskani 42 ta qilamiz: 42 + 9 = 51 ta (51 = 17 * 3).
-  // Yoki doskani 45 ta qilamiz: 45 + 9 = 54 ta (54 = 18 * 3, 8 x 6 = 48 + 6 = 54!).
-  // 54 ta plitka ayni muddao!
-  const activeLayout = BOARD_LAYOUT.slice(0, 45); // 45 ta maydonda
+  const activeLayout = BOARD_LAYOUT.slice(0, 45); // 45 ta maydonda plitka
 
   // 54 ta plitka uchun mevalar basseyini:
-  // 8 xil meva. 6 tasidan 7 tadan bo'lmaydi.
-  // 6 tasidan 6 tadan = 36 ta.
-  // 2 tasidan 9 tadan = 18 ta.
-  // Jami: 36 + 18 = 54 ta plitka (har biri 3 ga karrali!).
+  // Har doim 3 ga karrali qat'iy uchtaliklar!
+  // 6 ta turdan 6 tadan = 36 ta
+  // 2 ta turdan 9 tadan = 18 ta
+  // Jami: 36 + 18 = 54 ta (18 x 3)
   const pool = [];
   TILE_TYPES.forEach((type, idx) => {
     const count = idx < 6 ? 6 : 9;
@@ -102,8 +105,8 @@ export function generateGameData() {
     }
   });
 
-  // Aralashtirish
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  // Mukammal Fisher-Yates aralashtirish
+  const shuffled = shuffleArray(pool);
 
   // Maydon plitkalari (45 ta)
   const boardTiles = activeLayout.map((pos, i) => ({
@@ -114,7 +117,7 @@ export function generateGameData() {
     y: pos.y,
   }));
 
-  // Pastki 3 ta stack (har birida 3 tadan = 9 ta)
+  // Pastki 3 ta stack (har birida 3 tadan = 9 ta plitka)
   let offset = 45;
   const stacks = [
     [
@@ -138,7 +141,7 @@ export function generateGameData() {
 }
 
 /**
- * Dockga yangi plitka qo'shish va guruhlash.
+ * Dockga yangi plitka qo'shish va bir xil turlarni yonma-yon guruhlash.
  */
 export function addTileToDock(dockSlots, tile) {
   const newSlots = [...dockSlots];
@@ -157,6 +160,7 @@ export function addTileToDock(dockSlots, tile) {
 
 /**
  * 3 ta bir xil meva to'planganini tekshirish.
+ * Aniq 3 tasini xavfsiz olib tashlaydi.
  */
 export function checkMatch(dockSlots) {
   const counts = {};
@@ -165,8 +169,16 @@ export function checkMatch(dockSlots) {
   }
 
   for (const [type, count] of Object.entries(counts)) {
-    if (count === 3) {
-      const remaining = dockSlots.filter((t) => t.type !== type);
+    if (count >= 3) {
+      let removed = 0;
+      const remaining = [];
+      for (const t of dockSlots) {
+        if (t.type === type && removed < 3) {
+          removed++;
+        } else {
+          remaining.push(t);
+        }
+      }
       return { matched: type, remaining };
     }
   }
